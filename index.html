@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Lineup</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f6f1e7;--card:#fffdf8;--ink:#1d1b18;--mute:#7a7266;--line:#d9cfbd;--acc:#b3261e;--ok:#2e7d4f}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#16130f;--card:#1f1b16;--ink:#f1eadc;--mute:#9a9082;--line:#3a332a;--acc:#ff6b5e;--ok:#5ec38a}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#16130f;--card:#1f1b16;--ink:#f1eadc;--mute:#9a9082;--line:#3a332a;--acc:#ff6b5e;--ok:#5ec38a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Georgia,serif;line-height:1.45}
+main{max-width:780px;margin:0 auto;padding:28px 16px 60px}
+h1{font-size:2.3rem;margin:0;letter-spacing:.04em;text-transform:uppercase}
+.sub{color:var(--mute);margin:6px 0 18px;font-style:italic}
+.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin-bottom:18px}
+.box h2{margin:0 0 8px;font-size:1rem;text-transform:uppercase;letter-spacing:.08em;color:var(--acc)}
+.box ol,.box ul{margin:0;padding-left:22px}
+.box li{margin:7px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin:18px 0}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center;position:relative}
+.tile.done{border-color:var(--ok)}
+.lab{position:absolute;top:6px;left:8px;font:700 1.1rem Georgia,serif;color:var(--mute)}
+.emo{font-size:2.2rem;line-height:1.3;min-height:58px;margin-top:14px}
+.blank{font:.8rem system-ui,sans-serif;letter-spacing:.25em;color:var(--mute);margin:2px 0 4px}
+.tile input{width:100%;padding:6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:.95rem system-ui,sans-serif;text-align:center}
+.tile.done input{border-color:var(--ok);font-weight:700}
+button{margin-top:6px;padding:5px 10px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:.8rem system-ui,sans-serif;cursor:pointer}
+button:disabled{opacity:.4;cursor:default}
+.line{display:grid;grid-template-columns:repeat(auto-fit,minmax(56px,1fr));gap:6px;margin:8px 0}
+.slot{min-height:78px;border:2px dashed var(--line);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font:1.5rem Georgia,serif;cursor:pointer;position:relative}
+.slot small{position:absolute;top:2px;left:5px;font:.65rem system-ui,sans-serif;color:var(--mute)}
+.slot b{font:700 1.2rem system-ui,sans-serif;color:var(--acc);min-height:22px}
+.slot.on{border-style:solid;border-color:var(--ink)}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#msg{font:.9rem system-ui,sans-serif;color:var(--mute)}
+.final{text-align:center;margin-top:26px}
+.final input{padding:10px 14px;font:1.1rem system-ui,sans-serif;border:2px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);width:min(320px,90%);text-align:center}
+.win{display:none;margin-top:18px;padding:18px;border:2px solid var(--ok);border-radius:12px;font-size:1.3rem;background:var(--card)}
+.win.show{display:block}
+</style>
+</head>
+<body>
+<main>
+<h1>The Lineup</h1>
+<p class="sub">Eleven riddles stand in a single line. Work out who stands where.</p>
+
+<div class="box"><h2>How it works</h2><ul>
+<li>Each tile shows two pictures. Each half is a riddle, not a drawing: it may be a sound, a job, a clue or a joke about the thing. Put the two halves together and they join into one compound word. The blanks tell you how many letters it has.</li>
+<li>Every word gives you its <b>first letter</b>. Type the word to reveal it.</li>
+<li>Tiles are labelled with Greek letters. The clues use those labels and fix the order of the line. Together they allow only one line-up.</li>
+<li>Read the letters from first place to last. The result is two words.</li>
+</ul></div>
+
+<div class="box"><h2>Clues</h2><ol>
+<li>γ and ι stand at opposite ends of the line.</li>
+<li>β stands immediately after κ.</li>
+<li>η stands directly between α and λ.</li>
+<li>ε stands immediately after θ.</li>
+<li>Two tiles end with the same word. They stand exactly seven places apart.</li>
+<li>δ stands exactly three places after α.</li>
+<li>θ stands somewhere after λ.</li>
+<li>γ stands somewhere before ζ.</li>
+</ol></div>
+
+<div class="grid" id="grid"></div>
+
+<div class="box"><h2>The line</h2>
+<div class="line" id="line"></div>
+<div class="bar"><button id="chk">Check my line</button><span id="msg">Tap a tile’s button to add it. Tap a filled slot to remove it.</span></div>
+</div>
+
+<div class="final">
+<input id="fin" placeholder="the game mode" autocomplete="off">
+<div class="win" id="win">🏆 <b>Last one standing.</b> Puzzle solved.</div>
+</div>
+</main>
+<script>
+// id, emoji riddle, encoded word, label
+const T=[
+["lunchbox","🕛🍴🥊","bHVuY2hib3g=","α"],["treehouse","🌲🏚️","dHJlZWhvdXNl","β"],["butterfly","🧈✈️","YnV0dGVyZmx5","γ"],
+["overcoat","🏏6️⃣🧥","b3ZlcmNvYXQ=","δ"],["anthill","🐜🏔️","YW50aGlsbA==","ε"],["armchair","🦾🪑","YXJtY2hhaXI=","ζ"],
+["eggplant","🥚🏭","ZWdncGxhbnQ=","η"],["yearbook","🌍🔄☀️📖","eWVhcmJvb2s=","θ"],["lighthouse","🪶🏡","bGlnaHRob3VzZQ==","ι"],
+["toothbrush","🦷🖌️","dG9vdGhicnVzaA==","κ"],["rainbow","☔🏹","cmFpbmJvdw==","λ"]];
+const E={};T.forEach(t=>E[t[0]]=t);
+const norm=s=>s.toLowerCase().replace(/[^a-z]/g,"");
+const named={};let line=[];
+const clues=[
+p=>Math.abs(p.butterfly-p.lighthouse)===10,
+p=>p.treehouse===p.toothbrush+1,
+p=>p.lunchbox+1===p.eggplant&&p.eggplant+1===p.rainbow,
+p=>p.anthill===p.yearbook+1,
+p=>Math.abs(p.treehouse-p.lighthouse)===7,
+p=>p.overcoat===p.lunchbox+3,
+p=>p.yearbook>p.rainbow,
+p=>p.butterfly<p.armchair];
+const grid=document.getElementById("grid"),lineEl=document.getElementById("line"),msg=document.getElementById("msg");
+function draw(){
+ lineEl.innerHTML="";
+ for(let i=0;i<11;i++){
+  const id=line[i],s=document.createElement("div");s.className="slot"+(id?" on":"");
+  s.innerHTML=`<small>${i+1}</small>${id?E[id][3]:""}<b>${id&&named[id]?atob(E[id][2])[0].toUpperCase():""}</b>`;
+  if(id)s.onclick=()=>{line.splice(i,1);draw()};
+  lineEl.appendChild(s);
+ }
+ document.querySelectorAll(".add").forEach(b=>b.disabled=line.includes(b.dataset.id)||line.length>=11);
+}
+T.forEach(([id,e,w,lab])=>{
+ const d=document.createElement("div");d.className="tile";
+ d.innerHTML=`<div class="lab">${lab}</div><div class="emo">${e}</div><div class="blank">${"_ ".repeat(atob(w).length).trim()}</div><input placeholder="word" autocomplete="off" aria-label="Name this riddle"><button class="add" data-id="${id}">Add to line</button>`;
+ const inp=d.querySelector("input");
+ inp.addEventListener("input",()=>{
+  if(norm(inp.value)===atob(w)){d.classList.add("done");inp.disabled=true;named[id]=1;draw();}
+ });
+ d.querySelector(".add").onclick=()=>{if(line.length<11&&!line.includes(id)){line.push(id);draw();}};
+ grid.appendChild(d);
+});
+document.getElementById("chk").onclick=()=>{
+ if(line.length<11){msg.textContent="Place all 11 tiles first.";return;}
+ const p={};line.forEach((id,i)=>p[id]=i+1);
+ const n=clues.filter(f=>f(p)).length;
+ msg.textContent=n===clues.length?"Every clue holds. Now read the letters.":`${n} of ${clues.length} clues hold.`;
+};
+const target="battleroyal";
+document.getElementById("fin").addEventListener("input",e=>{
+ if(norm(e.target.value)===target){document.getElementById("win").classList.add("show");e.target.disabled=true;}
+});
+draw();
+</script>
+</body>
+</html>
